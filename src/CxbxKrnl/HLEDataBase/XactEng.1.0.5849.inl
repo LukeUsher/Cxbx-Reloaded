@@ -82,7 +82,7 @@ OOVPA_END;
 OOVPATable XactEng_5849[] = {
 	REGISTER_OOVPA(XACTEngineCreate, 5849, PATCH),
 	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
-	REGISTER_OOVPA(XACT_CEngine_CreateSoundSource, 5849, PATCH)
+	REGISTER_OOVPA(XACT_CEngine_CreateSoundSource, 5849, XREF)
 };
 
 // ******************************************************************
