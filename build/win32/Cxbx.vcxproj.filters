@@ -573,6 +573,9 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h">
       <Filter>HLEDatabase\XOnline</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.h">
+      <Filter>HLEDatabase</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
@@ -662,9 +665,6 @@
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl">
       <Filter>HLEDatabase\DSound</Filter>
     </None>
-    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl">
-      <Filter>HLEDatabase\DSound</Filter>
-    </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl">
       <Filter>HLEDatabase\Xapi</Filter>
     </None>
@@ -751,6 +751,9 @@
     </None>
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl">
       <Filter>HLEDatabase\XOnline</Filter>
+    </None>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.5849.inl">
+      <Filter>HLEDatabase</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

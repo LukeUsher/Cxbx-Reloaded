@@ -57,11 +57,32 @@ OOVPA_NO_XREF(XACTEngineCreate, 5849, 11)
 OOVPA_END;
 
 // ******************************************************************
+// * XACT::CEngine::CreateSoundSource
+// ******************************************************************
+// Created from $0030420C in "Kingdom Under Fire: The Crusaders"
+OOVPA_XREF(XACT_CEngine_CreateSoundSource, 5849, 8,
+		XREF_XACT_CEngine_CreateSoundSource,
+		XRefZero)
+		//XACT::CEngine::CreateSoundSource+0x09 : push eax
+		{ 0x09, 0x50 },
+		//XACT::CEngine::CreateSoundSource+0x0F : or eax, 20000000h
+		{ 0x0F, 0x0D },
+		{ 0x10, 0x00 },
+		{ 0x11, 0x00 },
+		{ 0x12, 0x00 },
+		{ 0x13, 0x20 },
+		//XACT::CEngine::CreateSoundSource+0x0F : mov [ecx], esi
+		{ 0x30, 0x89 },
+		{ 0x31, 0x31 }
+OOVPA_END;
+
+// ******************************************************************
 // * XactEng_5849
 // ******************************************************************
 OOVPATable XactEng_5849[] = {
 	REGISTER_OOVPA(XACTEngineCreate, 5849, PATCH),
 	REGISTER_OOVPA(XACTEngineDoWork, 4627, PATCH),
+	REGISTER_OOVPA(XACT_CEngine_CreateSoundSource, 5849, PATCH)
 };
 
 // ******************************************************************
