@@ -68,7 +68,6 @@ namespace xboxkrnl
 #include <thread>
 
 #include "CxbxKrnl.h"
-#include "device.h"
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuKrnl.h"
