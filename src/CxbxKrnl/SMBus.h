@@ -29,6 +29,7 @@
 #define AMD756_PROCESS_CALL 0x04
 #define AMD756_BLOCK_DATA   0x05
 
+// SMB_GLOBAL_STATUS flags
 #define GS_ABRT_STS (1 << 0)
 #define GS_COL_STS  (1 << 1)
 #define GS_PRERR_STS    (1 << 2)
@@ -52,8 +53,10 @@ class SMBus : public PCIDevice {
 		// PCI Functions
 		void Init();
 		void Reset();
-		uint32_t IORead(int barIndex, uint32_t addr);
-		void IOWrite(int barIndex, uint32_t addr, uint32_t data);
+
+		uint32_t IORead(int barIndex, uint32_t addr, unsigned size = sizeof(uint8_t));
+		void IOWrite(int barIndex, uint32_t addr, uint32_t data, unsigned size = sizeof(uint8_t));
+
 		uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size);
 		void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size);
 
@@ -71,17 +74,6 @@ class SMBus : public PCIDevice {
 		uint8_t m_Index;
 
 		void ExecuteTransaction();
-
-		void QuickCommand(uint8_t addr, int read);
-		uint8_t ReceiveByte(uint8_t addr);
-		uint8_t ReadByte(uint8_t addr, uint8_t command);
-		uint16_t ReadWord(uint8_t addr, uint8_t command);
-		int ReadBlock(uint8_t addr, uint8_t command, uint8_t *data);
-
-		void SendByte(uint8_t addr, uint8_t data);
-		void WriteByte(uint8_t addr, uint8_t command, uint8_t value);
-		void WriteWord(uint8_t addr, uint8_t command, uint16_t value);
-		void WriteBlock(uint8_t addr, uint8_t command, uint8_t* data, int length);
 
 		std::map<uint8_t, SMDevice*> m_Devices;
 };

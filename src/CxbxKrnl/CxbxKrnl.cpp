@@ -66,10 +66,14 @@ namespace xboxkrnl
 
 #include "PCIBus.h"
 #include "SMBus.h"
+#include "EEPROMDevice.h" // For EEPROMDevice
+#include "LED.h" // For LED::Sequence
+#include "SMCDevice.h" // For SMCDevice
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
 EEPROMDevice* g_EEPROM;
+SMCDevice* g_SMC;
 
 /* prevent name collisions */
 namespace NtDll
@@ -737,6 +741,12 @@ const char *GameRegionToString(DWORD aGameRegion)
 	return Regions[index];
 }
 
+void SetLEDSequence(LED::Sequence aLEDSequence)
+{
+	// TODO : Move to best suited location & implement
+	// See http://xboxdevwiki.net/PIC#The_LED
+}
+
 __declspec(noreturn) void CxbxKrnlInit
 (
 	HWND                    hwndParent,
@@ -963,16 +973,19 @@ __declspec(noreturn) void CxbxKrnlInit
 	EmuHLEIntercept(pXbeHeader);
 	SetupXboxDeviceTypes();
 
-#define SMBUS_SMC_SLAVE_ADDRESS 0x20 // = Write; Read = 0x21
-#define SMBUS_EEPROM_ADDRESS 0xA8 // = Write; Read = 0xA9
 #define SMBUS_TV_ENCODER_ID_CONEXANT 0x8A // = Write; Read = 08B
 #define SMBUS_TV_ENCODER_ID_FOCUS 0xD4 // = Write; Read = 0D5
 
 	// Init Hardware
 	g_PCIBus = new PCIBus();
 	g_SMBus = new SMBus();
-	g_EEPROM = new EEPROMDevice();
+	g_EEPROM = new EEPROMDevice((uint8_t*)EEPROM);
 	g_SMBus->ConnectDevice(SMBUS_EEPROM_ADDRESS, g_EEPROM);
+	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information
+	// https://web.archive.org/web/20100617022549/http://www.xbox-linux.org/wiki/PIC
+	g_SMC = new SMCDevice(Revision1_1); // TODO : Make configurable
+	g_SMBus->ConnectDevice(SMBUS_SMC_SLAVE_ADDRESS, g_SMC);
+
 	// TODO : Handle other SMBUS Addresses, like PIC_ADDRESS, XCALIBUR_ADDRESS
 	// Resources : http://pablot.com/misc/fancontroller.cpp
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
