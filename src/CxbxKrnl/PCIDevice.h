@@ -68,7 +68,7 @@ public:
 	virtual void Init() = 0;
 	virtual void Reset() = 0;
 	virtual uint32_t IORead(int barIndex, uint32_t port, unsigned size) = 0;
-	virtual void IOWrite(int BarIndex, uint32_t port, uint32_t value, unsigned size) = 0;
+	virtual void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size) = 0;
 	virtual uint32_t MMIORead(int barIndex, uint32_t addr, unsigned size) = 0;
 	virtual void MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigned size) = 0;
 
@@ -84,10 +84,12 @@ protected:
 	std::map<int, PCIBar> m_BAR;
 	uint16_t m_DeviceId;
 	uint16_t m_VendorId;
+/* Unused?
 private:
 
 	static uint64_t MMIOBarRead(struct uc_struct* uc, void* pBar, uint64_t addr, unsigned size);
 	static void MMIOBarWrite(struct uc_struct* uc, void* pBar, uint64_t addr, uint64_t value, unsigned size);
+*/
 };
 
 #endif
