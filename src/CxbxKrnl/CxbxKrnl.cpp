@@ -69,11 +69,14 @@ namespace xboxkrnl
 #include "EEPROMDevice.h" // For EEPROMDevice
 #include "LED.h" // For LED::Sequence
 #include "SMCDevice.h" // For SMCDevice
+#include "EmuNVNet.h" // For NVNetDevice
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
 EEPROMDevice* g_EEPROM;
 SMCDevice* g_SMC;
+NVNetDevice* g_NVNet;
+
 
 /* prevent name collisions */
 namespace NtDll
@@ -991,6 +994,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	// https://github.com/JayFoxRox/Chihiro-Launcher/blob/master/hook.h
 
 	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(1, 1)), g_SMBus);
+
+	g_NVNet = new NVNetDevice();
+	g_PCIBus->ConnectDevice(PCI_DEVID(0, PCI_DEVFN(4, 0)), g_NVNet);
 
 	// Always initialise NV2A: We may need it for disabled HLE patches too!
 	EmuNV2A_Init();
