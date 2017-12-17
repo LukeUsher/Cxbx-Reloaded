@@ -318,48 +318,38 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
 	CfgBits.u.bits.Enable = 1;
 
-	UCHAR RegisterDataTypes[4][4] = {
-		{0, 1, 2, 2},
-		{1, 1, 1, 1},
-		{2, 1, 2, 2},
-		{1, 1, 1, 1}
+	const int B = sizeof(uint8_t); // Byte
+	const int W = sizeof(uint16_t); // Word
+	const int L = sizeof(uint32_t); // Long
+	const UCHAR RegisterDataSizes[4][4] = {
+		{L, B, W, W},
+		{B, B, B, B},
+		{W, B, W, W},
+		{B, B, B, B}
 	};
 
 	while (Length > 0) {
 		int ByteOffset = RegisterNumber % sizeof(ULONG);
-		int Size = 0;
-		int Type = RegisterDataTypes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
+		int Size = RegisterDataSizes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-		EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+		EmuX86_IOWrite((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
 
-		switch (Type) {
-			case 0:	// ULONG
-				if (WritePCISpace) {
-					EmuX86_IOWrite32(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer));
-				} else {
-					*((PULONG)Buffer) = (ULONG)EmuX86_IORead32(PCI_TYPE1_DATA_PORT);
-				}
-
-				Size = 4;
+		if (WritePCISpace) {
+			EmuX86_IOWrite(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer), Size);
+		} else {
+			uint32_t value = EmuX86_IORead(PCI_TYPE1_DATA_PORT, Size);
+			// TODO : Could memcpy(Buffer, &value, Size) the following (for all endianesses)?
+			switch (Size) {
+			case sizeof(uint8_t): // Byte
+				*((PUCHAR)Buffer) = value;
 				break;
-			case 1: // UCHAR
-				if (WritePCISpace) {
-					EmuX86_IOWrite8(PCI_TYPE1_DATA_PORT + ByteOffset, *((PUCHAR)Buffer));
-				} else {
-					*((PUCHAR)Buffer) = (UCHAR)EmuX86_IORead8(PCI_TYPE1_DATA_PORT + ByteOffset);
-				}
-
-				Size = 1;
+			case sizeof(uint16_t): // Word
+				*((PUSHORT)Buffer) = value;
 				break;
-			case 2: // USHORT
-				if (WritePCISpace) {
-					EmuX86_IOWrite16(PCI_TYPE1_DATA_PORT + ByteOffset, *((PUSHORT)Buffer));
-				} else {
-					*((PUSHORT)Buffer) = (USHORT)EmuX86_IORead16(PCI_TYPE1_DATA_PORT + ByteOffset);
-				}
-
-				Size = 2;
+			case sizeof(uint32_t): // Long
+				*((PULONG)Buffer) = value;
 				break;
+			}
 		}
 		
 		RegisterNumber += Size;
@@ -571,7 +561,7 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
+		*Buffer++ = (uint8_t)EmuX86_IORead((xbaddr)Port, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -591,7 +581,7 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
+		*Buffer++ = (uint16_t)EmuX86_IORead((xbaddr)Port, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -611,7 +601,7 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
+		*Buffer++ = EmuX86_IORead((xbaddr)Port, sizeof(uint32_t));
 }
 
 // ******************************************************************
@@ -631,7 +621,7 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint8_t));
 }
 
 // ******************************************************************
@@ -651,7 +641,7 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint16_t));
 }
 
 // ******************************************************************
@@ -671,7 +661,7 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
+		EmuX86_IOWrite((xbaddr)Port, *Buffer++, sizeof(uint32_t));
 }
 
 // ******************************************************************
