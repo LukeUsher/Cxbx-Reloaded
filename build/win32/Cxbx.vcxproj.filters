@@ -626,6 +626,12 @@
     <ClCompile Include="..\..\src\core\hle\Patches.cpp">
       <Filter>core\HLE</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\devices\audio\AC97Device.cpp">
+      <Filter>Hardware\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\devices\audio\APUDevice.cpp">
+      <Filter>Hardware\Audio</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\common\crypto\EmuDes.cpp">
       <Filter>Emulator</Filter>
     </ClCompile>
@@ -801,6 +807,9 @@
     <Filter Include="core\HLE\D3D8\Direct3D9">
       <UniqueIdentifier>{c56dc02e-4531-4cd2-aac2-a3c97eec11c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hardware\Audio">
+      <UniqueIdentifier>{225fcd8d-1bce-4ebe-b4c4-b71ed152b1bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\resource\Cxbx.rc">
@@ -822,15 +831,6 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\devices\video\nv2a_regs.h">
       <Filter>Hardware\Video</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\crypto\EmuDes.h">
-      <Filter>Emulator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\core\kernel\exports\EmuKrnlKe.h">
-      <Filter>Kernel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\common\Timer.h">
-      <Filter>Emulator</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
