@@ -232,6 +232,11 @@ void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
 	eeprom->UserSettings.ParentalControlMovies = XC_PC_MAX; // = XC_PRTL_CRTL_MAX
 	eeprom->UserSettings.MiscFlags = 0;  // No automatic power down
 
-	// TODO: Online Settings
+	// Online Settings
+	// TODO: Generate a unique serial number & mac address
+	memset(eeprom->FactorySettings.SerialNumber, '9', 12);
+	uint8_t macAddress[6] = { 0x00, 0x50, 0xF2, 0x00, 0x00, 0x34 };
+    memcpy(eeprom->FactorySettings.EthernetAddr, macAddress, 6);
+
 	// TODO: TimeZone Settings
 }
