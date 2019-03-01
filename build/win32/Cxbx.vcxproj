@@ -77,7 +77,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Common;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\winpcap\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -139,7 +139,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\Common;..\..\src\Common\Win32\;%(AdditionalIncludeDirectories);..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src\Common\Win32;..\..\import\subhook\;..\..\import\DirectX9\include;..\..\import\simpleini;..\..\import\winpcap\Include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NOMINMAX;_WIN32_WINNT=0x0601;WIN32;CXBX_USE_D3D9;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -376,6 +376,7 @@
     <ClCompile Include="..\..\src\common\xdvdfs-tools\xdvdfs.cpp" />
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp" />
     <ClCompile Include="..\..\src\core\hle\DSOUND\XbDSoundLogging.cpp" />
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPhy.cpp" />
     <ClCompile Include="..\..\src\core\kernel\init\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

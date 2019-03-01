@@ -641,6 +641,9 @@
     <ClCompile Include="..\..\src\core\hle\DSOUND\DirectSound\DirectSoundLogging.cpp">
       <Filter>core\HLE\DSOUND\DirectSound</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\core\kernel\exports\EmuKrnlPhy.cpp">
+      <Filter>Kernel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Splash.jpg">
