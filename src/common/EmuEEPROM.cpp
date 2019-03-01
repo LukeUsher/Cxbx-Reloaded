@@ -45,6 +45,7 @@ namespace xboxkrnl
 
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
+#include <random>
 
 #include "Cxbx.h" // For DBG_PRINTF_EX
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
@@ -233,9 +234,25 @@ void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
 	eeprom->UserSettings.MiscFlags = 0;  // No automatic power down
 
 	// Online Settings
-	// TODO: Generate a unique serial number & mac address
-	memset(eeprom->FactorySettings.SerialNumber, '9', 12);
-	uint8_t macAddress[6] = { 0x00, 0x50, 0xF2, 0x00, 0x00, 0x34 };
+
+	// Setup the Serial and Mac Generators
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> serialDis (0, 9);
+	std::uniform_int_distribution<> macDis(0, 255);
+
+	// Generate a random serial number
+	std::string serial = "";
+	for (int i = 0; i < 9; i) {
+		serial += std::to_string(serialDis(gen));
+	}
+	strncpy((char*)eeprom->FactorySettings.SerialNumber, serial.c_str(), 12);
+
+	// Generate a random mac address
+	uint8_t macAddress[6] = { 0x00, 0x50, 0xF2 };
+	for (int i = 2; i < 6; i++) {
+		macAddress[i] = macDis(gen);
+	}
     memcpy(eeprom->FactorySettings.EthernetAddr, macAddress, 6);
 
 	// TODO: TimeZone Settings
