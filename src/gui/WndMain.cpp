@@ -44,6 +44,7 @@
 #include "DlgControllerConfig.h"
 #include "DlgVideoConfig.h"
 #include "DlgAudioConfig.h"
+#include "DlgNetworkConfig.h"
 #include "DlgEepromConfig.h"
 #include "DlgLoggingConfig.h"
 #include "DlgXboxControllerPortMapping.h"
@@ -962,6 +963,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 			case ID_SETTINGS_CONFIG_AUDIO:
 				ShowAudioConfig(hwnd);
+				break;
+
+			case ID_SETTINGS_CONFIG_NETWORK:
+				ShowNetworkConfig(hwnd);
 				break;
 
 			case ID_SETTINGS_CONFIG_EEPROM:
