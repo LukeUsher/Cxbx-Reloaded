@@ -45,7 +45,6 @@
 /*! handle to network adapter list window */
 static HWND g_hNetworkAdapters = nullptr;
 static Settings::s_network g_XBNetwork;
-static pcap_if_t *g_Devices;
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -112,7 +111,6 @@ INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LP
             switch(LOWORD(wParam))
             {
                 case IDC_AC_CANCEL:
-					pcap_freealldevs(g_Devices);
                     EndDialog(hWndDlg, wParam);
                     break;
 
@@ -123,7 +121,6 @@ INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LP
 					deviceName = (char*)SendMessage(hNetworkAdapter, CB_GETITEMDATA, (WPARAM)lRet, NULL);
 					strncpy(g_XBNetwork.adapter_name, deviceName, std::size(g_XBNetwork.adapter_name));
 					g_Settings->m_network = g_XBNetwork;
-					pcap_freealldevs(g_Devices);
                     EndDialog(hWndDlg, wParam);
 					break;
             }

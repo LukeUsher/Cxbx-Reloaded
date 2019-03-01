@@ -57,6 +57,7 @@ namespace xboxkrnl
 #include "EmuNVNet.h"
 #include <Iphlpapi.h>
 #include <pcap.h>
+#include <exception>
 
 #define IOPORT_SIZE 0x8
 #define MMIO_SIZE   0x400
@@ -483,6 +484,7 @@ void EmuNVNet_Write(xbaddr addr, uint32_t value, int size)
 std::thread NVNetRecvThread;
 static void NVNetRecvThreadProc(NvNetState_t *s)
 {
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 	uint8_t packet[65536];
 	while (true) {
 		int size = g_NVNet->PCAPReceive(packet, 65536);
@@ -526,7 +528,8 @@ void NVNetDevice::Init()
 
 	// Get Mac Address
 	if (!GetMacAddress(m_HostAdapterName, m_HostMacAddress.bytes)) {
-		CxbxKrnlCleanup("Failed to initialize network adapter");
+		EmuLog(LOG_LEVEL::WARNING, "Failed to initialize network adapter.");
+		return;
 	};
 
 	// Write the Guest Mac to the NVNet device
@@ -612,15 +615,23 @@ bool NVNetDevice::PCAPInit()
 	char errorBuffer[PCAP_ERRBUF_SIZE];
 
 	// Open the desired network adapter
-	m_AdapterHandle = pcap_open_live((std::string("\\Device\\NPF_" + m_HostAdapterName).c_str()),
-		65536,	// Capture entire packet
-		1,		// Use promiscuous mode
-		1,		// Read Timeout
-		errorBuffer
-	);
+	__try {
+		char buffer[MAX_PATH];
+		snprintf(buffer, MAX_PATH, "\\Device\\NPF_%s", m_HostAdapterName.c_str());
+		m_AdapterHandle = pcap_open_live(buffer,
+			65536,	// Capture entire packet
+			1,		// Use promiscuous mode
+			1,		// Read Timeout
+			errorBuffer
+		);
+	} __except(EXCEPTION_EXECUTE_HANDLER) {
+		m_AdapterHandle = nullptr;
+		snprintf(errorBuffer, PCAP_ERRBUF_SIZE, "Could not initialize pcap");
+	}
 
 	if (m_AdapterHandle == nullptr) {
-		CxbxKrnlCleanup("Unable to open Network Adapter:\n%s", errorBuffer);
+		EmuLog(LOG_LEVEL::WARNING, "Unable to open Network Adapter:\n%s\nNetworking will be disabled", errorBuffer);
+		return false;
 	}
 
 	if (pcap_setnonblock((pcap_t*)m_AdapterHandle, 1, errorBuffer) == -1) {
