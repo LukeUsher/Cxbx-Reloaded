@@ -110,6 +110,7 @@
       <BaseAddress>0x10000</BaseAddress>
       <FixedBaseAddress>true</FixedBaseAddress>
       <LargeAddressAware>true</LargeAddressAware>
+      <DelayLoadDLLs>wpcap.dll</DelayLoadDLLs>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -181,6 +182,7 @@
       <StackReserveSize>65536</StackReserveSize>
       <StackCommitSize>65536</StackCommitSize>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <DelayLoadDLLs>wpcap.dll</DelayLoadDLLs>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
