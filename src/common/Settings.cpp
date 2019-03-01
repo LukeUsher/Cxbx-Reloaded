@@ -104,6 +104,11 @@ static struct {
 	const char* codec_unknown = "UnknownCodec";
 } sect_audio_keys;
 
+static const char* section_network = "network";
+static struct {
+	const char* adapter_name = "adapter_name";
+} sect_network_keys;
+
 static const char* section_controller_dinput = "controller-dinput";
 // All keys so far are dynamic
 static struct {
@@ -431,6 +436,18 @@ bool Settings::LoadConfig()
 	m_audio.codec_unknown = m_si.GetBoolValue(section_audio, sect_audio_keys.codec_unknown, /*Default=*/true, nullptr);
 
 	// ==== Audio End ===========
+
+	// ==== Network Begin =======
+
+	si_data = m_si.GetValue(section_network, sect_network_keys.adapter_name, /*Default=*/nullptr);
+	// Fallback to null string if value is empty or contains a bigger string.
+	if (si_data == nullptr || std::strlen(si_data) >= std::size(m_network.adapter_name)) {
+		m_network.adapter_name[0] = '\0';
+	} else {
+		std::strncpy(m_network.adapter_name, si_data, std::size(m_network.adapter_name));
+	}
+
+	// ==== Network End =========
 
 	// ==== Controller Begin ====
 

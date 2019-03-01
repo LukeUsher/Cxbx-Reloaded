@@ -520,9 +520,9 @@ void NVNetDevice::Init()
 	NvNetState.tx_ring_size = 0;
 
 	// Fetch Host Network Device
-	XBNetwork networkSettings;
-	g_EmuShared->GetXBNetwork(&networkSettings);
-	m_HostAdapterName = networkSettings.GetNetworkAdapter();	
+	Settings::s_network networkSettings;
+	g_EmuShared->GetNetworkSettings(&networkSettings);
+	m_HostAdapterName = networkSettings.adapter_name;
 
 	// Get Mac Address
 	if (!GetMacAddress(m_HostAdapterName, m_HostMacAddress.bytes)) {
@@ -657,7 +657,7 @@ void PrintPacket(void* buffer, size_t length)
 	void* payloadPtr = (void*)((uint8_t*)buffer + sizeof(ethernet_header));
 	size_t payloadLength = length - sizeof(ethernet_header);
 
-	// If we support the EtherType, decode it, otherwise, just dump the raw payload
+	// TODO: If we support the EtherType, decode it, otherwise, just dump the raw payload
 	switch (ntohs(header->protocol)) {
 		default:
 			PrintRawPayload(payloadPtr, payloadLength);
