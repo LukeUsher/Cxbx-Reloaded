@@ -239,21 +239,28 @@ void EmuEEPROMReset(xboxkrnl::XBOX_EEPROM* eeprom)
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<> serialDis (0, 9);
-	std::uniform_int_distribution<> macDis(0, 255);
+	std::uniform_int_distribution<> macOnlineDis(0, 255);
 
 	// Generate a random serial number
 	std::string serial = "";
-	for (int i = 0; i < 9; i) {
+	for (int i = 0; i < 12; i++) {
 		serial += std::to_string(serialDis(gen));
 	}
+	memset(eeprom->FactorySettings.SerialNumber, 0, 12);
 	strncpy((char*)eeprom->FactorySettings.SerialNumber, serial.c_str(), 12);
 
 	// Generate a random mac address
-	uint8_t macAddress[6] = { 0x00, 0x50, 0xF2 };
-	for (int i = 2; i < 6; i++) {
-		macAddress[i] = macDis(gen);
+	eeprom->FactorySettings.EthernetAddr[0] = 0x00;
+	eeprom->FactorySettings.EthernetAddr[1] = 0x50;
+	eeprom->FactorySettings.EthernetAddr[2] = 0xF2;
+	for (int i = 3; i < 6; i++) {
+		eeprom->FactorySettings.EthernetAddr[i] = macOnlineDis(gen);
 	}
-    memcpy(eeprom->FactorySettings.EthernetAddr, macAddress, 6);
+
+	// Generate a random Online Key
+	for (int i = 0; i < 16; i++) {
+		eeprom->FactorySettings.OnlineKey[i] = macOnlineDis(gen);
+	}
 
 	// TODO: TimeZone Settings
 }

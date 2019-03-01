@@ -586,6 +586,12 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Audio End ===========
 
+	// ==== Network Begin =======
+
+	m_si.SetValue(section_network, sect_network_keys.adapter_name, m_network.adapter_name, nullptr, true);
+	
+	// ==== Network End =========
+
 	// ==== Controller Begin ====
 
 	int v = 0;
@@ -677,6 +683,9 @@ void Settings::SyncToEmulator()
 
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&m_audio);
+
+	// register Network settings
+	g_EmuShared->SetNetworkSettings(&m_network);
 
 	// register Controller settings
 	g_EmuShared->SetControllerDInputSettings(&m_controller_dinput);

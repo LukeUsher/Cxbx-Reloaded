@@ -52,7 +52,7 @@ static INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPa
 
 VOID ShowNetworkConfig(HWND hwnd)
 {
-	g_EmuShared->GetNetworkSettings(&g_XBNetwork);
+	g_XBNetwork = g_Settings->m_network;
     /*! show dialog box */
     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_NETWORK_CFG), hwnd, DlgNetworkConfigProc);
 }
@@ -122,7 +122,7 @@ INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LP
 					char* deviceName = nullptr;
 					deviceName = (char*)SendMessage(hNetworkAdapter, CB_GETITEMDATA, (WPARAM)lRet, NULL);
 					strncpy(g_XBNetwork.adapter_name, deviceName, std::size(g_XBNetwork.adapter_name));
-					g_EmuShared->SetNetworkSettings(&g_XBNetwork);
+					g_Settings->m_network = g_XBNetwork;
 					pcap_freealldevs(g_Devices);
                     EndDialog(hWndDlg, wParam);
 					break;
