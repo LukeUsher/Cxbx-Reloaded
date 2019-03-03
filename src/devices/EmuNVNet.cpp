@@ -333,6 +333,7 @@ void EmuNVNet_DMAPacketFromGuest()
 {
 	struct RingDesc desc;
 	bool is_last_packet;
+	bool packet_sent = false;
 
 	NvNetState_t* s = &NvNetState;
 
@@ -361,6 +362,8 @@ void EmuNVNet_DMAPacketFromGuest()
 		memcpy(s->txrx_dma_buf, (void*)(desc.packet_buffer | CONTIGUOUS_MEMORY_BASE), desc.length + 1);
 		g_NVNet->PCAPSend(s->txrx_dma_buf, desc.length + 1);
 
+		packet_sent = true;
+
 		/* Update descriptor */
 		is_last_packet = desc.flags & NV_TX_LASTPACKET;
 		desc.flags &= ~(NV_TX_VALID | NV_TX_RETRYERROR | NV_TX_DEFERRED | NV_TX_CARRIERLOST | NV_TX_LATECOLLISION | NV_TX_UNDERFLOW | NV_TX_ERROR);
@@ -374,10 +377,12 @@ void EmuNVNet_DMAPacketFromGuest()
 		}
 	}
 
-	/* Trigger interrupt */
-	DBG_PRINTF("Triggering interrupt\n");
-	EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT4, 4);
-	EmuNVNet_UpdateIRQ();
+	if (packet_sent) {
+		/* Trigger interrupt */
+		DBG_PRINTF("Triggering interrupt\n");
+		EmuNVNet_SetRegister(NvRegIrqStatus, NVREG_IRQSTAT_BIT4, 4);
+		EmuNVNet_UpdateIRQ();
+	}
 }
 
 bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
