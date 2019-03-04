@@ -613,6 +613,18 @@ void NVNetDevice::MMIOWrite(int barIndex, uint32_t addr, uint32_t value, unsigne
 	}
 
 	EmuNVNet_Write(addr, value, size); // For now, forward
+
+	// Cache guest MAC address for packet filter
+	if (addr == NvRegMacAddrA) {
+		m_GuestMacAddress.bytes[0] = NvNetState.regs[NvRegMacAddrA + 0];
+		m_GuestMacAddress.bytes[1] = NvNetState.regs[NvRegMacAddrA + 1];
+		m_GuestMacAddress.bytes[2] = NvNetState.regs[NvRegMacAddrA + 2];
+		m_GuestMacAddress.bytes[3] = NvNetState.regs[NvRegMacAddrA + 3];
+	}
+	else if (addr == NvRegMacAddrB) {
+		m_GuestMacAddress.bytes[4] = NvNetState.regs[NvRegMacAddrB + 0];
+		m_GuestMacAddress.bytes[5] = NvNetState.regs[NvRegMacAddrB + 1];
+	}
 }
 
 bool NVNetDevice::PCAPInit()
