@@ -44,7 +44,11 @@ namespace NtDll
 // TODO : Move to a better suited file
 //std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value);
 
+#define CHIHIRO_MBCOM_HANDLE (HANDLE)0x4D434F3D // MCOM in ascii
+
 extern const std::string MediaBoardRomFile;
+extern const std::string MediaBoardSegaBoot0;
+extern const std::string MediaBoardSegaBoot1;
 extern const std::string DrivePrefix;
 extern const std::string DriveSerial;
 extern const std::string DriveCdRom0;
@@ -66,6 +70,7 @@ extern const std::string DriveY;
 extern const std::string DriveZ;
 extern const std::string DevicePrefix;
 extern const std::string DeviceCdrom0;
+extern const std::string DeviceMbfs;
 extern const std::string DeviceHarddisk0;
 extern const std::string DeviceHarddisk0PartitionPrefix;
 extern const std::string DeviceHarddisk0Partition0;

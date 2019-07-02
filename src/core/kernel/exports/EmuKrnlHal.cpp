@@ -544,13 +544,20 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 			}
 
 			// If the title path was an empty string, we need to launch the dashboard
+			// Or in the case of Chihro: SEGABOOT
+			bool isHostPath = false;
 			if (TitlePath.length() == 0) {
-				TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+				if (g_bIsChihiro) {
+					isHostPath = true;
+					TitlePath = CxbxBasePath + MediaBoardRomFile;
+				} else {
+					TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+				}
 			}
 
 			std::string XbePath = TitlePath;
 			// Convert Xbox XBE Path to Windows Path
-			{
+			if (!isHostPath) {
 				HANDLE rootDirectoryHandle = nullptr;
 				std::wstring wXbePath;
 				// We pretend to come from NtCreateFile to force symbolic link resolution

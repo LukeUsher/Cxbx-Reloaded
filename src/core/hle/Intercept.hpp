@@ -38,6 +38,7 @@ void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
 std::string GetDetectedSymbolName(const xbox::addr_xt address, int * const symbolOffset);
 void* GetXboxFunctionPointer(std::string functionName);
+void* GetXboxSymbolPointer(std::string functionName);
 
 #define XB_TYPE(func) XB_TRAMPOLINE_##func##_t
 #define XB_NAME(func) XB_TRAMPOLINE_##func##_str

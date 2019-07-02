@@ -555,7 +555,7 @@ XBSYSAPI EXPORTNUM(370) ntstatus_xt NTAPI XProfpControl // PROFILING
 	ulong_xt Param
 );
 
-XBSYSAPI EXPORTNUM(371) ntstatus_xt NTAPI XProfpGetData // PROFILING 
+XBSYSAPI EXPORTNUM(371) ntstatus_xt NTAPI XProfpGetData // PROFILING
 (
 	// NO ARGUMENTS
 );

@@ -116,7 +116,10 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE;
 		g_XboxControllerHostBridge[Port].InState = new XpadInput();
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
-		g_XboxControllerHostBridge[Port].bSignaled = false;
+		if (g_bIsChihiro) {
+			// For chihiro, don't connect any devices via XInput: We want JVS emulation to handle input instead
+			g_XboxControllerHostBridge[port].dwHostType = X_XONTROLLER_HOST_BRIDGE_HOSTTYPE_NOTCONNECT;
+		} else {g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
@@ -157,7 +160,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 		EmuLog(LOG_LEVEL::WARNING, "Attempted to attach an unknown device type (type was %d)", Type);
 		ret = false;
 		break;
-	}
+	}}
 
 	g_bIsDevicesEmulating = false;
 	return ret;
@@ -954,7 +957,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
 			// that we don't accidently register the same routine twice!
 			if(g_pfnThreadNotification[i] == NULL)
 			{
-				g_pfnThreadNotification[i] = (PVOID)pThreadNotification->pfnNotifyRoutine;				
+				g_pfnThreadNotification[i] = (PVOID)pThreadNotification->pfnNotifyRoutine;
 				g_iThreadNotificationCount++;
 				break;
 			}
