@@ -89,9 +89,9 @@ void VMManager::Initialize(HANDLE memory_view, HANDLE pagetables_view, int BootF
 		// Save the type of xbe we are emulating in this emulation session. This information will be needed if the current xbe performs
 		// a quick reboot
 
-		m_MmLayoutChihiro = (g_XbeType == xtChihiro);
-		m_MmLayoutDebug = (g_XbeType == xtDebug);
-		m_MmLayoutRetail = (g_XbeType == xtRetail);
+		m_MmLayoutChihiro = g_bIsChihiro;
+		m_MmLayoutDebug = g_bIsDebug;
+		m_MmLayoutRetail = g_bIsRetail;
 
 		PreviousLayout = m_MmLayoutChihiro ? MmChihiro : (m_MmLayoutDebug ? MmDebug : MmRetail);
 	}

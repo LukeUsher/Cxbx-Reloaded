@@ -249,6 +249,14 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
+	// If we are emulating the Chihiro, we need to hook mbcom, so return an easily identifable handle
+	if (g_bIsChihiro) {
+		if (strncmp(ObjectAttributes->ObjectName->Buffer, DriveMbcom.c_str(), DriveMbcom.length()) == 0) {
+			*FileHandle = CHIHIRO_MBCOM_HANDLE;
+			return STATUS_SUCCESS;
+		}
+	}
+
 	NativeObjectAttributes nativeObjectAttributes;
 
 	// If we are NOT accessing a directory, and we match a partition path, we need to redirect to a partition.bin file

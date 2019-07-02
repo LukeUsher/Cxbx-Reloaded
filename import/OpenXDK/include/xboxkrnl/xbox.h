@@ -477,8 +477,8 @@ XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys[ALTERNATE_SIGNA
 // ******************************************************************
 XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyData[284];
 XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataRetail[284];
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiroGame[284];
-XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiroBoot[284];
+XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataDebug[284];
+XBSYSAPI EXPORTNUM(355) UCHAR XePublicKeyDataChihiro[284];
 
 // ******************************************************************
 // * 0x0165 - IdexChannelObject

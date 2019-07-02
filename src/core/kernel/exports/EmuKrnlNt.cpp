@@ -48,6 +48,7 @@ namespace NtDll
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
+#include "devices\Xbox.h"
 #include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -1652,6 +1653,16 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
 	}
 
+	// If we are emulating the Chihiro, we need to hook mbcom
+	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
+		g_MediaBoard->ComRead(ByteOffset->QuadPart, Buffer, Length);
+
+		// Update the Status Block
+		IoStatusBlock->Status = STATUS_SUCCESS;
+		IoStatusBlock->Information = Length;
+		return STATUS_SUCCESS;
+	}
+
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,
 		Event,
@@ -2170,6 +2181,16 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 			Offset = ByteOffset->QuadPart;
 		
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
+	}
+
+	// If we are emulating the Chihiro, we need to hook mbcom
+	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
+		g_MediaBoard->ComWrite(ByteOffset->QuadPart, Buffer, Length);
+
+		// Update the Status Block
+		IoStatusBlock->Status = STATUS_SUCCESS;
+		IoStatusBlock->Information = Length;
+		return STATUS_SUCCESS;
 	}
 
 	NTSTATUS ret = NtDll::NtWriteFile(

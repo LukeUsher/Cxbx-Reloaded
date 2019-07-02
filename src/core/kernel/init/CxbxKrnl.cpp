@@ -66,6 +66,7 @@ namespace xboxkrnl
 #include "Timer.h" // For Timer_Init
 #include "common\input\InputManager.h" // For the InputDeviceManager
 
+
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
 /*! thread local storage data */
@@ -1166,24 +1167,92 @@ void CxbxKrnlMain(int argc, char* argv[])
 		g_bIsChihiro = (g_XbeType == xtChihiro);
 		g_bIsDebug = (g_XbeType == xtDebug);
 		g_bIsRetail = (g_XbeType == xtRetail);
-
-		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
-		// Chihiro games can be ran directly for now. 
-		// This just means that you cannot access the Chihiro test menus and related stuff, games should still be okay
-#if 0   
+	
 		// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
-		// TODO: We also need to store the path of the loaded game, and mount it as the mediaboard filesystem
-		// TODO: How to we detect who launched us, to prevent a reboot-loop
-		if (g_bIsChihiro) {
+		char MediaBoardMountPath[MAX_PATH];
+		g_EmuShared->GetMediaBoardMountPath(MediaBoardMountPath);
+
+		// If the XBE path contains a boot.id, it must be a Chihiro title
+		// So we force g_bIsChihiro to true!
+		// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
+		// which means we cannot rely on that alone.
+		std::string xbeDirectory = szFilePath_Xbe;
+		std::replace(xbeDirectory.begin(), xbeDirectory.end(), ';', '/');
+		xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
+		
+		if (std::experimental::filesystem::exists(xbeDirectory + "/boot.id")) {
+			g_bIsDebug = false;
+			g_bIsRetail = false;
+			g_bIsChihiro = true;
+		}
+
+		if (g_bIsChihiro && strlen(MediaBoardMountPath) == 0) {
 			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
 			if (!std::filesystem::exists(chihiroMediaBoardRom)) {
 				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
 			}
 
+			// Open a handle to the mediaboard rom
+			FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
+			if (fpRom == nullptr) {
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
+			}
+
+			// Verify the size of media board rom
+			fseek(fpRom, 0, SEEK_END);
+			auto length = ftell(fpRom);
+			if (length != 2 * ONE_MB) {
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
+			}
+			fseek(fpRom, 0, SEEK_SET);
+
+			// Extract SEGABOOT_OLD.XBE and SEGABOOT.XBE from Media Rom
+			// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
+			std::string chihiroSegaBootOld = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot0;
+			std::string chihiroSegaBootNew = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot1;
+			if (!std::experimental::filesystem::exists(chihiroSegaBootOld) || !std::experimental::filesystem::exists(chihiroSegaBootNew)) {
+				FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
+				FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
+				if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {
+					CxbxKrnlCleanup("Could not open SEGABOOT for writing");
+				}
+
+				// Extract SEGABOOT (Old)
+				void* buffer = malloc(ONE_MB);
+				if (buffer == nullptr) {
+					CxbxKrnlCleanup("Could not allocate buffer for SEGABOOT");
+				}
+
+				fread(buffer, 1, ONE_MB, fpRom);
+				fwrite(buffer, 1, ONE_MB, fpSegaBootOld);
+
+				// Extract SEGABOOT (New)
+				fread(buffer, 1, ONE_MB, fpRom);
+				fwrite(buffer, 1, ONE_MB, fpSegaBootNew);
+
+				free(buffer);
+
+				fclose(fpSegaBootOld);
+				fclose(fpSegaBootNew);
+				fclose(fpRom);
+			}
+
+			// Prepare to mount Media Board filesystem
+			strcpy(MediaBoardMountPath, xbeDirectory.c_str());
+			g_EmuShared->SetMediaBoardMountPath(MediaBoardMountPath);
+
+			// Launch Segaboot
 			delete CxbxKrnl_Xbe;
-			CxbxKrnl_Xbe = new Xbe(chihiroMediaBoardRom.c_str(), false);
+			CxbxKrnl_Xbe = new Xbe(chihiroSegaBootNew.c_str(), false);
+			g_XbeType = xtChihiro;
 		}
-#endif
+
+		// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
+		// The Chihiro kernel does this, so we should too!
+		if (g_bIsChihiro) {
+			CxbxKrnl_Xbe->m_Header.dwInitFlags.bDontSetupHarddisk = true;
+		}
+
 		// Initialize the virtual manager
 		g_VMManager.Initialize(hMemoryBin, hPageTables, BootFlags);
 
@@ -1191,7 +1260,6 @@ void CxbxKrnlMain(int argc, char* argv[])
 		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
 		VAddr XbeBase = XBE_IMAGE_BASE;
 		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
-
 
 		// Copy over loaded Xbe Headers to specified base address
 		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -1607,6 +1675,11 @@ __declspec(noreturn) void CxbxKrnlInit
 	InitXboxThread(g_CPUXbox);
 	xboxkrnl::ObInitSystem();
 	xboxkrnl::KiInitSystem();
+
+	// If this title is Chihiro, Setup JVS
+	if (g_bIsChihiro) {
+		XTL::JVS_Init();
+	}
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
