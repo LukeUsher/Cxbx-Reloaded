@@ -46,6 +46,10 @@
 #define MB_CMD_SERIAL_NUMBER                0x0103
 #define MB_CMD_HARDWARE_TEST                0x0301
 
+#define MB_CHIHIRO_REGION_FLAG_JAPAN    0x2
+#define MB_CHIHIRO_REGION_FLAG_USA      0x4
+#define MB_CHIHIRO_REGION_FLAG_EXPORT   0x8
+
 typedef struct {
     char magic[4];
     uint32_t unknown0[3];  
@@ -53,9 +57,9 @@ typedef struct {
     char mediaboardType[4]; // XBAM for Chihiro
     uint32_t unknown2[3];
     char gameId[4];
-    uint32_t unknown3[3];
-    uint32_t unknown4[4];
-    uint32_t unknown5[4];
+    uint32_t unknown3;
+	uint32_t regionFlags;
+    uint32_t unknown4[9];
     char manufacturer[0x20];
     char gameName[0x20];
     char gameExecutable[0x20];
