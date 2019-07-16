@@ -36,6 +36,7 @@
 #include "core\kernel\support\EmuXTL.h"
 #include "core\hle\Intercept.hpp"
 #include "devices\chihiro\JvsIo.h"
+#include "devices\Xbox.h"
 #include <thread>
 
 #pragma warning(disable:4244) // Silence mio compiler warnings
@@ -242,6 +243,28 @@ void XTL::JVS_Init()
 
 	// Set state to a sane initial default
 	ChihiroBaseBoardState.Reset();
+
+	// Auto-Patch Chihiro Region Flag to match the desired game
+	uint8_t& region = (uint8_t&)g_MainBoardFirmware[0x1F00];
+	auto regionFlags = g_MediaBoard->GetBootId().regionFlags;
+
+	// The region of the system can be converted to a game region flag by doing 1 << region
+	// This gives a bitmask that can be ANDed with the BootID region flags to check the games support
+	if ((regionFlags & (1 << region)) == 0) {
+		// The region was not compatible, so we need to patch the region flag
+		// This avoids "Error 05: This game is not acceptable by main board."
+		// We use USA,EXPORT,JAPAN to make sure mutiple-language games default to English first
+		if (regionFlags & MB_CHIHIRO_REGION_FLAG_USA) {
+			region = 2;
+		}
+		else if (regionFlags & MB_CHIHIRO_REGION_FLAG_EXPORT) {
+			region = 3;
+		}
+		else if (regionFlags & MB_CHIHIRO_REGION_FLAG_JAPAN) {
+			region = 1;
+		}
+	}
+	
 
 	// Spawn the Chihiro/JVS Input Thread
 	std::thread(JvsInputThread).detach();

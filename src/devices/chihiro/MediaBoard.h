@@ -79,6 +79,8 @@ public:
 	// Mbcom partition handlers
 	void ComRead(uint32_t offset, void* buffer, uint32_t length);
 	void ComWrite(uint32_t offset, void* buffer, uint32_t length);
+
+	chihiro_bootid& GetBootId();
 private:
 	uint8_t readBuffer[512];
 	uint8_t writeBuffer[512];
