@@ -41,6 +41,11 @@ namespace xboxkrnl
 #include "core\kernel\init\\CxbxKrnl.h"
 #include "core\kernel\exports\EmuKrnl.h" // for HalSystemInterrupts
 
+chihiro_bootid& MediaBoard::GetBootId()
+{
+	return BootID;
+}
+
 void MediaBoard::SetMountPath(std::string path)
 {
     m_MountPath = path;
