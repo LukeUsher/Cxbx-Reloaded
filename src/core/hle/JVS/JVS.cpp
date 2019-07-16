@@ -44,10 +44,10 @@
 #pragma warning(default:4244)
 
 // Global variables used to store JVS related firmware/eeproms
-mio::mmap_sink g_MainBoardFirmware;		// QC Microcontroller firmware
-mio::mmap_sink g_MainBoardScFirmware;	// SC Microcontroller firmware
-mio::mmap_sink g_MainBoardEeprom;		// Config EEPROM
-mio::mmap_sink g_MainBoardBackup;		// Backup Memory (high-scores, etc)
+mio::mmap_sink g_BaseBoardQcFirmware;		// QC Microcontroller firmware
+mio::mmap_sink g_BaseBoardScFirmware;		// SC Microcontroller firmware
+mio::mmap_sink g_BaseBoardEeprom;			// Config EEPROM
+mio::mmap_sink g_BaseBoardBackupMemory;		// Backup Memory (high-scores, etc)
 
 typedef struct {
 	// Switch 1:	Horizontal Display, On = Vertical Display
@@ -173,28 +173,28 @@ void XTL::JVS_Init()
 	g_pJvsIo = new JvsIo(&ChihiroBaseBoardState.JvsSense);
 
 	std::string romPath = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk\\Chihiro");
-	std::string mainBoardFirmwarePath = "ic10_g24lc64.bin";
-	std::string mainBoardScFirmwarePath = "pc20_g24lc64.bin";
-	std::string mainBoardEepromPath = "ic11_24lc024.bin";
-	std::string mainBoardBackupPath = "backup_ram.bin";
+	std::string baseBoardQcFirmwarePath = "ic10_g24lc64.bin";
+	std::string baseBoardScFirmwarePath = "pc20_g24lc64.bin";
+	std::string baseBoardEepromPath = "ic11_24lc024.bin";
+	std::string baseBoardBackupRamPath = "backup_ram.bin";
 
-	if (!JVS_LoadFile((romPath + "\\" + mainBoardFirmwarePath).c_str(), g_MainBoardFirmware)) {
-		CxbxKrnlCleanup("Failed to load mainboard firmware: %s", mainBoardFirmwarePath.c_str());
+	if (!JVS_LoadFile((romPath + "\\" + baseBoardQcFirmwarePath).c_str(), g_BaseBoardQcFirmware)) {
+		CxbxKrnlCleanup("Failed to load base board firmware: %s", baseBoardQcFirmwarePath.c_str());
 	}
 
-	if (!JVS_LoadFile((romPath + "\\" + mainBoardScFirmwarePath).c_str(), g_MainBoardScFirmware)) {
-		CxbxKrnlCleanup("Failed to load mainboard qc firmware: %s", mainBoardScFirmwarePath.c_str());
+	if (!JVS_LoadFile((romPath + "\\" + baseBoardScFirmwarePath).c_str(), g_BaseBoardScFirmware)) {
+		CxbxKrnlCleanup("Failed to load base board qc firmware: %s", baseBoardScFirmwarePath.c_str());
 	}
 
-	if (!JVS_LoadFile((romPath + "\\" + mainBoardEepromPath).c_str(), g_MainBoardEeprom)) {
-		CxbxKrnlCleanup("Failed to load mainboard EEPROM: %s", mainBoardEepromPath.c_str());
+	if (!JVS_LoadFile((romPath + "\\" + baseBoardEepromPath).c_str(), g_BaseBoardEeprom)) {
+		CxbxKrnlCleanup("Failed to load base board EEPROM: %s", baseBoardEepromPath.c_str());
 	}
 
 	// backup ram is a special case, we can create it automatically if it doesn't exist
-	if (!std::experimental::filesystem::exists(romPath + "\\" + mainBoardBackupPath)) {
-		FILE* fp = fopen((romPath + "\\" + mainBoardBackupPath).c_str(), "w");
+	if (!std::experimental::filesystem::exists(romPath + "\\" + baseBoardBackupRamPath)) {
+		FILE* fp = fopen((romPath + "\\" + baseBoardBackupRamPath).c_str(), "w");
 		if (fp == nullptr) {
-			CxbxKrnlCleanup("Could not create Backup File: %s", mainBoardBackupPath.c_str());
+			CxbxKrnlCleanup("Could not create Backup File: %s", baseBoardBackupRamPath.c_str());
 		}
 
 		// Create 128kb empty file for backup ram
@@ -203,8 +203,8 @@ void XTL::JVS_Init()
 		fclose(fp);
 	}
 
-	if (!JVS_LoadFile((romPath + "\\" + mainBoardBackupPath).c_str(), g_MainBoardBackup)) {
-		CxbxKrnlCleanup("Failed to load mainboard BACKUP RAM: %s", mainBoardBackupPath.c_str());
+	if (!JVS_LoadFile((romPath + "\\" + baseBoardBackupRamPath).c_str(), g_BaseBoardBackupMemory)) {
+		CxbxKrnlCleanup("Failed to load base board BACKUP RAM: %s", baseBoardBackupRamPath.c_str());
 	}
 
 	// Determine which version of JVS_SendCommand this title is using and derive the offset
@@ -245,7 +245,7 @@ void XTL::JVS_Init()
 	ChihiroBaseBoardState.Reset();
 
 	// Auto-Patch Chihiro Region Flag to match the desired game
-	uint8_t& region = (uint8_t&)g_MainBoardFirmware[0x1F00];
+	uint8_t& region = (uint8_t&)g_BaseBoardQcFirmware[0x1F00];
 	auto regionFlags = g_MediaBoard->GetBootId().regionFlags;
 
 	// The region of the system can be converted to a game region flag by doing 1 << region
@@ -313,7 +313,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsBACKUP_Read)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy((void*)Buffer, &g_MainBoardBackup[Offset], Length);
+	memcpy((void*)Buffer, &g_BaseBoardBackupMemory[Offset], Length);
 
 	RETURN(0);
 }
@@ -333,7 +333,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsBACKUP_Write)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy(&g_MainBoardBackup[Offset], (void*)Buffer, Length);
+	memcpy(&g_BaseBoardBackupMemory[Offset], (void*)Buffer, Length);
 
 	RETURN(0);
 }
@@ -353,7 +353,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsEEPROM_Read)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy((void*)Buffer, &g_MainBoardEeprom[Offset], Length);
+	memcpy((void*)Buffer, &g_BaseBoardEeprom[Offset], Length);
 
 	RETURN(0);
 }
@@ -373,10 +373,10 @@ DWORD WINAPI XTL::EMUPATCH(JvsEEPROM_Write)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy(&g_MainBoardEeprom[Offset], (void*)Buffer, Length);
+	memcpy(&g_BaseBoardEeprom[Offset], (void*)Buffer, Length);
 
 	std::error_code error;
-	g_MainBoardEeprom.sync(error);
+	g_BaseBoardEeprom.sync(error);
 
 	if (error) {
 		EmuLog(LOG_LEVEL::WARNING, "Couldn't sync EEPROM to disk");
@@ -400,7 +400,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsFirmwareDownload)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy((void*)Buffer, &g_MainBoardFirmware[Offset], Length);
+	memcpy((void*)Buffer, &g_BaseBoardQcFirmware[Offset], Length);
 
 	RETURN(0);
 }
@@ -421,7 +421,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsFirmwareUpload)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy(&g_MainBoardFirmware[Offset], (void*)Buffer, Length);
+	memcpy(&g_BaseBoardQcFirmware[Offset], (void*)Buffer, Length);
 
 	RETURN(0);
 }
@@ -573,7 +573,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsScFirmwareDownload)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy((void*)Buffer, &g_MainBoardScFirmware[Offset], Length);
+	memcpy((void*)Buffer, &g_BaseBoardScFirmware[Offset], Length);
 
 	RETURN(0);
 }
@@ -593,7 +593,7 @@ DWORD WINAPI XTL::EMUPATCH(JvsScFirmwareUpload)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
-	memcpy(&g_MainBoardScFirmware[Offset], (void*)Buffer, Length);
+	memcpy(&g_BaseBoardScFirmware[Offset], (void*)Buffer, Length);
 
 	RETURN(0);
 }
