@@ -1004,6 +1004,25 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
         }
 		pDisassembly << "\n";
     }
+
+    // Finally, append our modifications to transform back from screen space
+    if (Truncate) {
+        // Xbox leaves shaders in screen space, but d3d needs them before this transformation
+        // So we need to reverse the operation
+        // We use some custom constants to store the inverse transform
+
+        // First, we undo the 'offset' addition
+        pDisassembly << "sub r12, r12, c" << X_D3DVS_VIEWPORT_OFFSET_MIRROR << "\n";
+
+        // Next, we undo the perspective divide (by multiplying by r12.w, negating the division)
+        pDisassembly << "mul r12.xyz, r12, r12.w\n";
+        
+        // Then, we undo the scale (by applying our inverted scale constant)
+        pDisassembly << "mul r12.xyz, r12, c" << X_D3DVS_VIEWPORT_SCALE_MIRROR_INVERTED << "\n";
+                       
+        // Finally, move r12 back into oPos
+        pDisassembly << "mov oPos, r12\n";
+    }
 }
 
 static void VshAddParameter(VSH_PARAMETER     *pParameter,
@@ -1357,134 +1376,6 @@ static boolean DxbxFixupScalarParameter(VSH_SHADER_INSTRUCTION *pInstruction,
     return Result;
 }
 
-/*
-    mul oPos.xyz, r12, c-38
-    +rcc r1.x, r12.w
-
-    mad oPos.xyz, r12, r1.x, c-37
-*/
-static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
-{
-    int16_t PosC38    = -1;
-    int deleted     = 0;
-
-    for (int i = 0; i < pShader->IntermediateCount; i++)
-    {
-        VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-
-        for (int k = 0; k < 3; k++)
-        {
-            if(pIntermediate->Parameters[k].Active)
-            {
-                if(pIntermediate->Parameters[k].Parameter.ParameterType == PARAM_C &&
-                   !pIntermediate->Parameters[k].IndexesWithA0_X)
-                {
-                    if(pIntermediate->Parameters[k].Parameter.Address == -37)
-                    {
-                        // Found c-37, remove the instruction
-                        if(k == 2 &&
-                           pIntermediate->Parameters[1].Active &&
-                           pIntermediate->Parameters[1].Parameter.ParameterType == PARAM_R)
-                        {
-                            DbgVshPrintf("PosC38 = %d i = %d\n", PosC38, i);
-                            for (int j = (i-1); j >= 0; j--)
-                            {
-                                VSH_INTERMEDIATE_FORMAT* pIntermediate1W = &pShader->Intermediate[j];
-                                // Time to start searching for +rcc r#.x, r12.w
-                                if(pIntermediate1W->InstructionType == IMD_ILU &&
-                                    pIntermediate1W->ILU == ILU_RCC &&
-                                    pIntermediate1W->Output.Type == IMD_OUTPUT_R &&
-                                    pIntermediate1W->Output.Address ==
-                                    pIntermediate->Parameters[1].Parameter.Address)
-                                {
-                                    DbgVshPrintf("Deleted +rcc r1.x, r12.w\n");
-                                    VshDeleteIntermediate(pShader, j);
-                                    deleted++;
-                                    i--;
-                                    //j--;
-                                    break;
-                                }
-                            }
-                        }
-                        VshDeleteIntermediate(pShader, i);
-                        deleted++;
-                        i--;
-                        DbgVshPrintf("Deleted mad oPos.xyz, r12, r1.x, c-37\n");
-                        break;
-                    }
-                    else if(pIntermediate->Parameters[k].Parameter.Address == -38)
-                    {
-                        VshDeleteIntermediate(pShader, i);
-                        PosC38 = i;
-                        deleted++;
-                        i--;
-                        DbgVshPrintf("Deleted mul oPos.xyz, r12, c-38\n");
-                    }
-                }
-            }
-        }
-    }
-
-    // If we couldn't find the generic screen space transformation we're
-    // assuming that the shader writes direct screen coordinates that must be
-    // normalized. This hack will fail if (a) the shader uses custom screen
-    // space transformation, (b) reads r13 or r12 after we have written to
-    // them, or (c) doesn't reserve c-38 and c-37 for scale and offset.
-    if(deleted != 3)
-    {
-        EmuLog(LOG_LEVEL::WARNING, "Applying screen space vertex shader patching hack!");
-        for (int i = 0; i < pShader->IntermediateCount; i++)
-        {
-            VSH_INTERMEDIATE_FORMAT* pIntermediate = &pShader->Intermediate[i];
-
-            // Find instructions outputting to oPos.
-            if( pIntermediate->Output.Type    == IMD_OUTPUT_O &&
-                pIntermediate->Output.Address == OREG_OPOS)
-            {
-                // Redirect output to r12.
-                pIntermediate->Output.Type    = IMD_OUTPUT_R;
-                pIntermediate->Output.Address = 12;
-
-                // Scale r12 to r13. (mul r13.[mask], r12, c58)
-                VSH_INTERMEDIATE_FORMAT MulIntermediate;
-                MulIntermediate.IsCombined        = FALSE;
-                MulIntermediate.InstructionType   = IMD_MAC;
-                MulIntermediate.MAC               = MAC_MUL;
-                MulIntermediate.Output.Type       = IMD_OUTPUT_R;
-                MulIntermediate.Output.Address    = 13;
-                MulIntermediate.Output.Mask[0]    = pIntermediate->Output.Mask[0];
-                MulIntermediate.Output.Mask[1]    = pIntermediate->Output.Mask[1];
-                MulIntermediate.Output.Mask[2]    = pIntermediate->Output.Mask[2];
-                MulIntermediate.Output.Mask[3]    = pIntermediate->Output.Mask[3];
-                MulIntermediate.Parameters[0].Active                  = TRUE;
-                MulIntermediate.Parameters[0].IndexesWithA0_X                   = FALSE;
-                MulIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                MulIntermediate.Parameters[0].Parameter.Address       = 12;
-                MulIntermediate.Parameters[0].Parameter.Neg           = FALSE;
-                VshSetSwizzle(&MulIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-                MulIntermediate.Parameters[1].Active                  = TRUE;
-                MulIntermediate.Parameters[1].IndexesWithA0_X                   = FALSE;
-                MulIntermediate.Parameters[1].Parameter.ParameterType = PARAM_C;
-                MulIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(58);
-                MulIntermediate.Parameters[1].Parameter.Neg           = FALSE;
-                VshSetSwizzle(&MulIntermediate.Parameters[1], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-                MulIntermediate.Parameters[2].Active                  = FALSE;
-                VshInsertIntermediate(pShader, &MulIntermediate, ++i);
-
-                // Add offset with r13 to oPos (add oPos.[mask], r13, c59)
-                VSH_INTERMEDIATE_FORMAT AddIntermediate = MulIntermediate;
-                AddIntermediate.MAC               = MAC_ADD;
-                AddIntermediate.Output.Type       = IMD_OUTPUT_O;
-                AddIntermediate.Output.Address    = OREG_OPOS;
-                AddIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-                AddIntermediate.Parameters[0].Parameter.Address       = 13;
-                AddIntermediate.Parameters[1].Parameter.Address       = ConvertCRegister(59);
-                VshInsertIntermediate(pShader, &AddIntermediate, ++i);
-            }
-        }
-    }
-}
-
 static void VshRemoveUnsupportedObRegisters(VSH_XBOX_SHADER *pShader)
 {
 	int deleted = 0;
@@ -1519,12 +1410,6 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 
     // TODO: What about state shaders and such?
     pShader->ShaderHeader.Version = VERSION_VS;
-
-    // Search for the screen space instructions, and remove them
-    if(!bNoReservedConstants)
-    {
-        VshRemoveScreenSpaceInstructions(pShader);
-    }
 
 	// Windows does not support back-facing colours, so we remove them from the shaders
 	// Test Case: Panzer Dragoon Orta
@@ -1609,7 +1494,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
 				{
 					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-					pIntermediate->Parameters[j].Parameter.Address += 96;
+					pIntermediate->Parameters[j].Parameter.Address += X_D3DSCM_CORRECTION;
 				}
 
 				if (pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_V) {
@@ -1635,7 +1520,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         if(pIntermediate->Output.Type == IMD_OUTPUT_C)
         {
 			//if(pIntermediate->Output.Address < 0)
-				pIntermediate->Output.Address += 96;
+				pIntermediate->Output.Address += X_D3DSCM_CORRECTION;
         }
 
 
@@ -1745,25 +1630,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             pIntermediate->Output.Address = 12;
         }
     }
-
-    // We append one additional instruction to mov oPos, r12
-    VSH_INTERMEDIATE_FORMAT MovIntermediate = {0};
-    MovIntermediate.MAC = MAC_MOV;
-    MovIntermediate.Output.Type = IMD_OUTPUT_O;
-    MovIntermediate.Output.Address = OREG_OPOS;
-    MovIntermediate.Output.Mask[0] = true;
-    MovIntermediate.Output.Mask[1] = true;
-    MovIntermediate.Output.Mask[2] = true;
-    MovIntermediate.Output.Mask[3] = true;
-    MovIntermediate.Parameters[0].Active = true;
-    MovIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-    MovIntermediate.Parameters[0].Parameter.Address = 12;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[0] = SWIZZLE_X;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[1] = SWIZZLE_Y;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[2] = SWIZZLE_Z;
-    MovIntermediate.Parameters[0].Parameter.Swizzle[3] = SWIZZLE_W;
-    VshInsertIntermediate(pShader, &MovIntermediate, pShader->IntermediateCount);
-
+    
     return TRUE;
 }
 
