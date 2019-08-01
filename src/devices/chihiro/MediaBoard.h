@@ -59,11 +59,13 @@ typedef struct {
     uint16_t year;              // 0x28
     uint8_t month;              // 0x2A
     uint8_t day;                // 0x2B
-    uint32_t unknown3;
+    uint8_t unknown3[2];
+    uint8_t type3Compatible;    // 0x2E (Type-3 compatibile titles have this set to 1)
+    uint8_t unknown4;
     char gameId[4];             // 0x30
-    uint32_t unknown4;
+    uint32_t unknown5;
     uint32_t regionFlags;       // 0x38
-    uint32_t unknown5[9];
+    uint32_t unknown6[9];
     char manufacturer[0x20];    // 0x60
     char gameName[0x20];        // 0x80
     char gameExecutable[0x20];  // 0xA0
