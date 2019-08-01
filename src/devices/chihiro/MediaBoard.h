@@ -51,20 +51,24 @@
 #define MB_CHIHIRO_REGION_FLAG_EXPORT   0x8
 
 typedef struct {
-    char magic[4];
-    uint32_t unknown0[3];  
-    uint32_t unknown1[4];   
-    char mediaboardType[4]; // XBAM for Chihiro
-    uint32_t unknown2[3];
-    char gameId[4];
+    char magic[4];              // 0x00 (Always BTID)
+    uint32_t unknown0[3];
+    uint32_t unknown1[4];
+    char mediaboardType[4];     // 0x20 (XBAM for Chihiro)
+    uint32_t unknown2;
+    uint16_t year;              // 0x28
+    uint8_t month;              // 0x2A
+    uint8_t day;                // 0x2B
     uint32_t unknown3;
-	uint32_t regionFlags;
-    uint32_t unknown4[9];
-    char manufacturer[0x20];
-    char gameName[0x20];
-    char gameExecutable[0x20];
-    char testExecutable[0x20];
-    char creditTypes[8][0x20];
+    char gameId[4];             // 0x30
+    uint32_t unknown4;
+    uint32_t regionFlags;       // 0x38
+    uint32_t unknown5[9];
+    char manufacturer[0x20];    // 0x60
+    char gameName[0x20];        // 0x80
+    char gameExecutable[0x20];  // 0xA0
+    char testExecutable[0x20];  // 0xC0
+    char creditTypes[8][0x20];  // 0xE0
 } chihiro_bootid;
 
 class MediaBoard
