@@ -33,7 +33,7 @@
 #include "common\Logging.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\kernel\support\EmuXTL.h"
+#include "core\hle\JVS\JVS.h"
 #include "core\hle\Intercept.hpp"
 #include "devices\chihiro\JvsIo.h"
 #include "devices\Xbox.h"
@@ -167,7 +167,7 @@ void JvsInputThread()
 }
 
 
-void XTL::JVS_Init()
+void JVS_Init()
 {
 	// Init Jvs IO board
 	g_pJvsIo = new JvsIo(&ChihiroBaseBoardState.JvsSense);

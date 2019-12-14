@@ -373,7 +373,6 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_XIDCTRL:
 				case IDC_LOG_ADM:
 				case IDC_LOG_JVS:
-				case IDC_LOG_ADM:
 				case IDC_LOG_INPSYS:
 				case IDC_LOG_KRNL:
 				case IDC_LOG_LOG:

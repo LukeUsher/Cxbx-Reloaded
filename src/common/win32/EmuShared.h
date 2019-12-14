@@ -289,7 +289,6 @@ class EmuShared : public Mutex
 		char         m_DeviceName[4][50];
 		int          m_Reserved99[28]; // Reserve space
 		char		 m_MediaBoardMountPoint[MAX_PATH];
-		int          m_Reserved99[32]; // Reserve space
 
 
 		// Settings class in memory should not be tampered by third-party.

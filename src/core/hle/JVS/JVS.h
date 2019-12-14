@@ -27,6 +27,9 @@
 // Used by CxbxKrnl to setup JVS roms
 void JVS_Init();
 
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
+
+namespace XTL {
 DWORD WINAPI EMUPATCH(JVS_SendCommand)
 (
 	DWORD a1,
@@ -174,4 +177,5 @@ DWORD WINAPI EMUPATCH(JvsScSendRs323c)
 	DWORD a3
 );
 
+}
 #endif

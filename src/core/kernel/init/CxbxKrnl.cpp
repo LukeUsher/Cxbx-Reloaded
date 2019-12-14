@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
+#include "core\hle\JVS\JVS.h" // For JVS_Init
 #include "core\hle\Intercept.hpp"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"
@@ -1678,7 +1679,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// If this title is Chihiro, Setup JVS
 	if (g_bIsChihiro) {
-		XTL::JVS_Init();
+		JVS_Init();
 	}
 
 	EmuX86_Init();
