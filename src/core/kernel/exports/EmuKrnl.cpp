@@ -178,6 +178,9 @@ void CallSoftwareInterrupt(const xboxkrnl::KIRQL SoftwareIrql)
 		}
 		break;
 	}
+
+	// Clear interrupt request register
+	HalInterruptRequestRegister ^= (1 << SoftwareIrql);
 }
 
 const DWORD IrqlMasks[] = {

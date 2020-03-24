@@ -633,7 +633,6 @@ void TriggerPendingConnectedInterrupts()
 		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
 			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
-		SwitchToThread();
 	}
 }
 
@@ -1181,7 +1180,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 		std::replace(xbeDirectory.begin(), xbeDirectory.end(), ';', '/');
 		xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
 		
-		if (std::experimental::filesystem::exists(xbeDirectory + "/boot.id")) {
+		if (std::filesystem::exists(xbeDirectory + "/boot.id")) {
 			g_bIsDebug = false;
 			g_bIsRetail = false;
 			g_bIsChihiro = true;
@@ -1211,7 +1210,7 @@ void CxbxKrnlMain(int argc, char* argv[])
 			// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
 			std::string chihiroSegaBootOld = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot0;
 			std::string chihiroSegaBootNew = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot1;
-			if (!std::experimental::filesystem::exists(chihiroSegaBootOld) || !std::experimental::filesystem::exists(chihiroSegaBootNew)) {
+			if (!std::filesystem::exists(chihiroSegaBootOld) || !std::filesystem::exists(chihiroSegaBootNew)) {
 				FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
 				FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
 				if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {

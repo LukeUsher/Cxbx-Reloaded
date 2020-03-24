@@ -191,7 +191,7 @@ void JVS_Init()
 	}
 
 	// backup ram is a special case, we can create it automatically if it doesn't exist
-	if (!std::experimental::filesystem::exists(romPath + "\\" + baseBoardBackupRamPath)) {
+	if (!std::filesystem::exists(romPath + "\\" + baseBoardBackupRamPath)) {
 		FILE* fp = fopen((romPath + "\\" + baseBoardBackupRamPath).c_str(), "w");
 		if (fp == nullptr) {
 			CxbxKrnlCleanup("Could not create Backup File: %s", baseBoardBackupRamPath.c_str());
