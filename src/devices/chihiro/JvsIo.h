@@ -73,7 +73,23 @@ typedef struct {
 } jvs_switch_player_inputs_t;
 
 typedef struct {
-	uint8_t system = false;
+	bool test = false;
+	bool tilt1 = false;
+	bool tilt2 = false;
+	bool tilt3 = false;
+
+	uint8_t GetByte0() {
+		uint8_t value = 0;
+		value |= test      ? 1 << 7 : 0;
+		value |= tilt1     ? 1 << 6 : 0;
+		value |= tilt2     ? 1 << 5 : 0;
+		value |= tilt3     ? 1 << 4 : 0;
+		return value;
+	}
+} jvs_switch_system_inputs_t;
+
+typedef struct {
+	jvs_switch_system_inputs_t system;
 	jvs_switch_player_inputs_t player[JVS_MAX_PLAYERS];
 } jvs_switch_inputs_t;
 
