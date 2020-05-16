@@ -188,7 +188,7 @@ int JvsIo::Jvs_Command_20_ReadSwitchInputs(uint8_t* data)
 
 	ResponseBuffer.push_back(ReportCode::Handled);
 
-	ResponseBuffer.push_back(Inputs.switches.system);
+	ResponseBuffer.push_back(Inputs.switches.system.GetByte0());
 
 	for (int i = 0; i < nr_switch_players; i++) {
 		for (int j = 0; j < bytesPerSwitchPlayerInput; j++) {
