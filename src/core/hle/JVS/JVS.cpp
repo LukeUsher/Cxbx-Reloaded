@@ -52,7 +52,7 @@ mio::mmap_sink g_BaseBoardBackupMemory;		// Backup Memory (high-scores, etc)
 typedef struct {
 	// Switch 1:	Horizontal Display, On = Vertical Display
 	// Switch 2-3:	D3D Resolution Configuraton
-	// Switch 4:	0 = Hardware Vertex Processing, 1 = Software Vertex processing (Causes D3D to fail).. Why does this exist?
+	// Switch 4:	0 = Hardware Vertex Processing, 1 = Software Vertex processing (Causes D3D to fail).. Horizontal frequency?
 	// Switch 5:	Unknown
 	// Switch 6-8:	Connected AV Pack flag
 	bool DipSwitch[8];

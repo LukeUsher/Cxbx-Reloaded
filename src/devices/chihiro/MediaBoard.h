@@ -59,7 +59,8 @@ typedef struct {
     uint16_t year;              // 0x28
     uint8_t month;              // 0x2A
     uint8_t day;                // 0x2B
-    uint8_t unknown3[2];
+    uint8_t videoMode;          // 0x2C unknown bitmask, resolutions + horizontal/vertical
+    uint8_t unknown3;
     uint8_t type3Compatible;    // 0x2E (Type-3 compatibile titles have this set to 1)
     uint8_t unknown4;
     char gameId[8];             // 0x30
