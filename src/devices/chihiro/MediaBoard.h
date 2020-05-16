@@ -62,8 +62,7 @@ typedef struct {
     uint8_t unknown3[2];
     uint8_t type3Compatible;    // 0x2E (Type-3 compatibile titles have this set to 1)
     uint8_t unknown4;
-    char gameId[4];             // 0x30
-    uint32_t unknown5;
+    char gameId[8];             // 0x30
     uint32_t regionFlags;       // 0x38
     uint32_t unknown6[9];
     char manufacturer[0x20];    // 0x60
