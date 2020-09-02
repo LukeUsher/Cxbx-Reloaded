@@ -2128,6 +2128,35 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 		}
 	}
 }
+
+
+void SetAspectRatioResolution(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
+{
+    // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
+    // For those, we *lie* about the default width, for the scaler
+    // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
+    // apply this 'hack' for non-hd resolutions
+    g_AspectRatioScaleWidth = pPresentationParameters->BackBufferWidth;
+    g_AspectRatioScaleHeight = pPresentationParameters->BackBufferHeight;
+
+    if (pPresentationParameters->Flags & X_D3DPRESENTFLAG_WIDESCREEN &&
+        pPresentationParameters->BackBufferHeight < 720) {
+        // Lie and pretend we are 1280x720, this works because this ratio is only used in calculations
+        // and not used as actual raw input values
+        g_AspectRatioScaleWidth = 1280;
+        g_AspectRatioScaleHeight = 720;
+    }
+}
+
+void SetAspectRatioScale(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
+{
+    SetAspectRatioResolution(pPresentationParameters);
+    const auto imageAspect = (float)g_AspectRatioScaleWidth / (float)g_AspectRatioScaleHeight;
+    const auto screenAspect = (float)g_HostBackBufferDesc.Width / (float)g_HostBackBufferDesc.Height;
+    g_AspectRatioScale = screenAspect > imageAspect ? (float)g_HostBackBufferDesc.Height / (float)g_AspectRatioScaleHeight : (float)g_HostBackBufferDesc.Width / (float)g_AspectRatioScaleWidth;
+}
+
+
 // thread dedicated to create devices
 static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 {
@@ -2213,11 +2242,18 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 						&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
 						szBackBufferFormat,
 						&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
-						EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
-							g_EmuCDPD.XboxPresentationParameters.BackBufferWidth, g_EmuCDPD.XboxPresentationParameters.BackBufferHeight,
+						// Resolution could not be decoded from mode string, this usually means the user has selected 'Automatic'
+
+						// Calculate aspect ratio-corrected Xbox resolution now: this makes sure that games using anamorphic widescreen
+						// will get a 16:9 host framebuffer, making 'Automatic' always use the correct aspect for the game!
+						SetAspectRatioResolution(&g_EmuCDPD.XboxPresentationParameters);
+						g_EmuCDPD.HostPresentationParameters.BackBufferWidth = g_AspectRatioScaleWidth;
+						g_EmuCDPD.HostPresentationParameters.BackBufferHeight = g_AspectRatioScaleHeight;
+
+						EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Automatic (%d, %d @ %uhz)", resolution,
+							g_EmuCDPD.HostPresentationParameters.BackBufferWidth, g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
 							g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz);
-						g_EmuCDPD.HostPresentationParameters.BackBufferWidth = g_EmuCDPD.XboxPresentationParameters.BackBufferWidth;
-						g_EmuCDPD.HostPresentationParameters.BackBufferHeight = g_EmuCDPD.XboxPresentationParameters.BackBufferHeight;
+
 						g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz;
 					}
 
@@ -2847,28 +2883,6 @@ void UpdateHostBackBufferDesc()
     }
 
     pCurrentHostBackBuffer->Release();
-}
-
-void SetAspectRatioScale(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
-{
-    // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
-    // For those, we *lie* about the default width, for the scaler
-    // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
-    // apply this 'hack' for non-hd resolutions
-    g_AspectRatioScaleWidth = pPresentationParameters->BackBufferWidth;
-    g_AspectRatioScaleHeight = pPresentationParameters->BackBufferHeight;
-
-    if (pPresentationParameters->Flags & X_D3DPRESENTFLAG_WIDESCREEN &&
-        pPresentationParameters->BackBufferHeight < 720) {
-        // Lie and pretend we are 1280x720, this works because this ratio is only used in calculations
-        // and not used as actual raw input values
-        g_AspectRatioScaleWidth = 1280;
-        g_AspectRatioScaleHeight = 720;
-    }
-    
-    const auto imageAspect = (float)g_AspectRatioScaleWidth / (float)g_AspectRatioScaleHeight;
-    const auto screenAspect = (float)g_HostBackBufferDesc.Width / (float)g_HostBackBufferDesc.Height;
-    g_AspectRatioScale = screenAspect > imageAspect ? (float)g_HostBackBufferDesc.Height / (float)g_AspectRatioScaleHeight : (float)g_HostBackBufferDesc.Width / (float)g_AspectRatioScaleWidth;
 }
 
 #define CXBX_D3DMULTISAMPLE_XSCALE(type) (((type) & xbox::X_D3DMULTISAMPLE_XSCALE_MASK) >> xbox::X_D3DMULTISAMPLE_XSCALE_SHIFT)
@@ -5047,7 +5061,7 @@ DWORD WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
-        // Clear the backbuffer surface
+        // Clear the backbuffer surface to prevent artifacts when aspect ratio changes
         IDirect3DSurface* pExistingRenderTarget = nullptr;
         hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
         if (hRet == D3D_OK) {
