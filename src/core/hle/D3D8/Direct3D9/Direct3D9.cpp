@@ -66,6 +66,7 @@
 #include "common\input\SdlJoystick.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
+#include "core\hle\Patches.hpp" // For EmuDisable/RestoreD3DPatches
 
 #include <assert.h>
 #include <process.h>
@@ -262,8 +263,10 @@ g_EmuCDPD = {0};
 
 // Declare trampolines
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                       \
+    XB_MACRO(VOID,               WINAPI,     D3DDevice_BeginPushBuffer,         (xbox::X_D3DPushBuffer *pPushBuffer)                                                     );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST DWORD*, CONST DWORD*, DWORD*, DWORD)                                        );  \
     XB_MACRO(VOID,               WINAPI,     D3DDevice_DeleteVertexShader,      (DWORD)                                                                            );  \
+    XB_MACRO(HRESULT,            WINAPI,     D3DDevice_EndPushBuffer,           (VOID)                                                                             );  \
     XB_MACRO(VOID,               WINAPI,     D3DDevice_GetBackBuffer,           (INT, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                     );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,          (INT)                                                                              );  \
     XB_MACRO(HRESULT,            WINAPI,     D3DDevice_GetDepthStencilSurface,  (xbox::X_D3DSurface**)                                                              );  \
@@ -3341,6 +3344,39 @@ VOID WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(DWORD *pPush)
 		g_pXbox_BeginPush_Buffer = nullptr;
 	}
 }
+
+
+// ******************************************************************
+// * patch: D3DDevice_BeginPushBuffer
+// ******************************************************************
+VOID WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(X_D3DPushBuffer *pPushBuffer)
+{
+     LOG_FUNC_ONE_ARG(pPushBuffer);
+     LOG_TEST_CASE("Title uses D3DDevice_BeginPushBuffer");
+
+     EmuDisableD3DPatches();
+
+     if (XB_TRMP(D3DDevice_BeginPushBuffer)) {
+         XB_TRMP(D3DDevice_BeginPushBuffer)(pPushBuffer);
+     }
+}
+
+// ******************************************************************
+// * patch: D3DDevice_EndPushBuffer
+// ******************************************************************
+HRESULT WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)()
+{
+    EmuRestoreD3DPatches();
+
+    HRESULT hRet = D3D_OK;
+
+    if (XB_TRMP(D3DDevice_EndPushBuffer)) {
+        hRet = XB_TRMP(D3DDevice_EndPushBuffer)();
+    }
+
+    return hRet;
+}
+
 
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest

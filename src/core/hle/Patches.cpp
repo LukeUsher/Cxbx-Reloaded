@@ -47,6 +47,7 @@ const uint32_t PATCH_HLE_D3D = 1 << 1;
 const uint32_t PATCH_HLE_DSOUND = 1 << 2;
 const uint32_t PATCH_HLE_OHCI = 1 << 3;
 const uint32_t PATCH_IS_FIBER = 1 << 4;
+const uint32_t PATCH_SKIP_DISABLE = 1 << 5;
 
 #define PATCH_ENTRY(Name, Func, Flags) \
     { Name, xbox_patch_t { (void *)&Func, Flags} }
@@ -59,6 +60,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_Begin", xbox::EMUPATCH(D3DDevice_Begin), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BeginPush", xbox::EMUPATCH(D3DDevice_BeginPush), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BeginPush2", xbox::EMUPATCH(D3DDevice_BeginPush2), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_BeginPushBuffer", xbox::EMUPATCH(D3DDevice_BeginPushBuffer), PATCH_HLE_D3D | PATCH_SKIP_DISABLE),
 	PATCH_ENTRY("D3DDevice_BeginVisibilityTest", xbox::EMUPATCH(D3DDevice_BeginVisibilityTest), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BlockOnFence", xbox::EMUPATCH(D3DDevice_BlockOnFence), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BlockUntilVerticalBlank", xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank), PATCH_HLE_D3D),
@@ -77,6 +79,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_EnableOverlay", xbox::EMUPATCH(D3DDevice_EnableOverlay), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_End", xbox::EMUPATCH(D3DDevice_End), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_EndPush", xbox::EMUPATCH(D3DDevice_EndPush), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_EndPushBuffer", xbox::EMUPATCH(D3DDevice_EndPushBuffer), PATCH_HLE_D3D | PATCH_SKIP_DISABLE),
 	PATCH_ENTRY("D3DDevice_EndVisibilityTest", xbox::EMUPATCH(D3DDevice_EndVisibilityTest), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_EndVisibilityTest_0", xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_FlushVertexCache", xbox::EMUPATCH(D3DDevice_FlushVertexCache), PATCH_HLE_D3D),
@@ -425,6 +428,26 @@ inline void EmuInstallPatch(const std::string FunctionName, const xbox::addr Fun
 	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), (void*)patch.patchFunc);
 	printf("HLE: %s Patched\n", FunctionName.c_str());
 }
+
+void EmuDisableD3DPatches()
+{
+    for (auto it = g_PatchTable.begin(); it != g_PatchTable.end(); ++it) {
+        if (it->second.flags & PATCH_HLE_D3D && !(it->second.flags & PATCH_SKIP_DISABLE)) {
+            g_FunctionHooks[it->first].Remove();
+        }
+    }
+}
+
+void EmuRestoreD3DPatches()
+{
+    for (auto it = g_PatchTable.begin(); it != g_PatchTable.end(); ++it) {
+        auto addr = g_SymbolAddresses[it->first];
+        if (addr && it->second.flags & PATCH_HLE_D3D && !(it->second.flags & PATCH_SKIP_DISABLE)) {
+              g_FunctionHooks[it->first].Install((void*)addr, (void*)it->second.patchFunc);
+        }
+    }
+}
+
 
 void EmuInstallPatches()
 {

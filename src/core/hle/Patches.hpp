@@ -30,4 +30,7 @@
 void EmuInstallPatches();
 void* GetPatchedFunctionTrampoline(std::string functionName);
 
+void EmuDisableD3DPatches();
+void EmuRestoreD3DPatches();
+
 #endif
