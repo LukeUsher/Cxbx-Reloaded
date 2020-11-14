@@ -33,11 +33,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::JVS // TODO: XBAM
 
-namespace xboxkrnl
-{
-	#include <xboxkrnl/xboxkrnl.h>
-};
-
+#include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\init\\CxbxKrnl.h"
 #include "core\kernel\exports\EmuKrnl.h" // for HalSystemInterrupts
 
@@ -135,7 +131,7 @@ void MediaBoard::ComWrite(uint32_t offset, void* buffer, uint32_t length)
                 break;
             case MB_CMD_HARDWARE_TEST: {
                 uint32_t testType = inputBuffer32[1];
-                xbaddr resultWritePtr = inputBuffer32[2];
+                xbox::addr_xt resultWritePtr = inputBuffer32[2];
                 outputBuffer32[1] = inputBuffer32[1];
 
                 printf("Perform Test Type %X, place result at %08X\n", testType, resultWritePtr);

@@ -249,7 +249,7 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 	if (g_bIsChihiro) {
 		if (strncmp(ObjectAttributes->ObjectName->Buffer, DriveMbcom.c_str(), DriveMbcom.length()) == 0) {
 			*FileHandle = CHIHIRO_MBCOM_HANDLE;
-			return STATUS_SUCCESS;
+			return xbox::status_success;
 		}
 	}
 

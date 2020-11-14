@@ -1163,7 +1163,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			// Launch Segaboot
 			delete CxbxKrnl_Xbe;
 			CxbxKrnl_Xbe = new Xbe(chihiroSegaBootNew.c_str(), false);
-			g_XbeType = xtChihiro;
+            xbeType = XbeType::xtChihiro;
 		}
 
 		// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
