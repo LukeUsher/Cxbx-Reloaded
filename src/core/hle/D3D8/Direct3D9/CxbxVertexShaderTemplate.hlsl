@@ -289,8 +289,15 @@ float4 reverseScreenspaceTransform(float4 oPos)
 VS_OUTPUT main(const VS_INPUT xIn)
 {
 	// Output variables
-	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
-	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // Pre-initialize w component of outputs to 1
+	float4 oPos = vRegisterDefaultValues[0];
+	float4 oD0 = vRegisterDefaultValues[3];
+	float4 oD1 = vRegisterDefaultValues[4];
+	float4 oB0 = vRegisterDefaultValues[7];
+	float4 oB1 = vRegisterDefaultValues[8];
+	float4 oT0 = vRegisterDefaultValues[9];
+	float4 oT1 = vRegisterDefaultValues[10];
+	float4 oT2 = vRegisterDefaultValues[11];
+	float4 oT3 = vRegisterDefaultValues[12];
 
 	// Single component outputs
 	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
@@ -312,7 +319,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Initialize input registers from the vertex buffer data
 	// Or use the register's default value (which can be changed by the title)
-	#define init_v(i) v##i = lerp(xIn.v[i], vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
+	#define init_v(i) v##i = xIn.v[i];
 	// Note : unroll manually instead of for-loop, because of the ## concatenation
 	init_v( 0); init_v( 1); init_v( 2); init_v( 3);
 	init_v( 4); init_v( 5); init_v( 6); init_v( 7);
