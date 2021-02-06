@@ -3317,6 +3317,17 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
 
+	static bool firstRun = false;
+
+	// Skip _first_ createdevice in halo so GPA can attach
+	if (g_pCertificate->dwTitleId == 0x4D530004) {
+		if (!firstRun) {
+			firstRun = true;
+			return 1;
+		}
+	}
+
+
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
